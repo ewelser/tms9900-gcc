@@ -1,0 +1,85 @@
+#!/bin/bash
+
+# This script initializes the build environment
+#
+# This script takes no arguments
+
+cd patchfiles
+
+# Find latest version of GCC and latest patch
+LIST=`ls gcc* | sed 's/-tms9900.*//'`
+GCC_VER=`../utils/latest $LIST`
+LIST=`ls $GCC_VER*`
+GCC_PATCH=`../utils/latest $LIST`
+
+# Find latest version of Binutils and latest patch
+LIST=`ls binutils* | sed 's/-tms9900.*//'`
+BIN_VER=`../utils/latest $LIST`
+LIST=`ls $BIN_VER*`
+BIN_PATCH=`../utils/latest $LIST`
+
+# Get Binutils patch from user
+PATCH_OK=false
+while [ "$PATCH_OK" == "false" ]; do
+  echo "Specify Binutils patch (default: $BIN_PATCH)"
+  read USER_PATCH
+  pwd
+  if [ -z "$USER_PATCH" ]; then
+    PATCH_OK=true
+  elif [ -f "$USER_PATCH" ]; then
+    if [[ "$USER_PATCH" == "binutils"* ]]; then
+      BIN_PATCH=$USER_PATCH
+      PATCH_OK=true
+    else
+      echo "Not a patch for Binutils, try again"
+    fi
+  else
+    echo "Not found in ./patchfiles, try again"
+  fi
+done
+
+# Get GCC patch from user
+PATCH_OK=false
+while [ "$PATCH_OK" == "false" ]; do
+  echo "Specify GCC patch (default: $GCC_PATCH)"
+  read USER_PATCH
+  if [ -z "$USER_PATCH" ]; then
+    PATCH_OK=true
+  elif [ -f "$USER_PATCH" ]; then
+    if [[ "$USER_PATCH" == "gcc"* ]]; then
+      GCC_PATCH=$USER_PATCH
+      PATCH_OK=true
+    else
+      echo "Not a patch for GCC, try again"
+    fi
+  else
+    echo "Not found in ./patchfiles, try again"
+  fi
+done
+
+# Get install directory
+INSTALL_DIR="./install"
+echo "Specify installation directory (default: ./install)"
+read USER_DIR
+if [ ! -z "$USER_DIR" ]; then
+  INSTALL_DIR=$USER_DIR
+fi
+
+# Report settings
+echo "Using $BIN_PATCH"
+echo "Using $GCC_PATCH"
+echo "Installing to $INSTALL_DIR"
+
+# Save settings
+cd ..
+echo "BIN_PATCH=$BIN_PATCH" > settings.cfg
+echo "GCC_PATCH=$GCC_PATCH" >> settings.cfg
+echo "INSTALL_DIR=$INSTALL_DIR" >> settings.cfg
+
+# Make install directory
+mkdir -p $INSTALL_DIR
+
+# Initialize "src" directory
+./utils/apply_patch patchfiles/$BIN_PATCH
+./utils/apply_patch patchfiles/$GCC_PATCH
+

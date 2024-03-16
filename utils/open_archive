@@ -1,0 +1,70 @@
+#!/bin/bash
+
+# This script extracts the contents of a source archive into the given location.
+# The needed archive will be downloaded if not already present in the "archives"
+# directory.
+#
+# This script takes two arguments: The source archive to download and the target
+# destination.
+#
+# Examples:
+#   open_archive gcc-12.1.0 src/gcc-12.1.0-original
+#   open_archive binutils 2.40 src/binutils-2.40
+
+unzip_archive(){
+  ARCHIVE=$1
+  EXT=${ARCHIVE##*.}
+
+  if [ "$EXT" == "bz2" ]; then
+    bunzip2 -c *.bz2 > temp.tar
+    tar -xf temp.tar
+    rm temp.tar
+
+  elif [ "$EXT" == "gz" ]; then
+    tar -xzf *.gz -C .
+  fi
+
+  rm $ARCHIVE
+}
+
+BASE=$1
+DEST=$2
+
+# Set variables needed to get binutils source
+if [[ "$BASE" == "binutils"* ]]; then
+  ARCHIVE=$BASE.tar.bz2
+  URL="http://ftp.gnu.org/gnu/binutils/$ARCHIVE"
+fi
+
+# Set variables needed to get gcc source
+if [[ "$BASE" == "gcc"* ]]; then
+  ARCHIVE=$BASE.tar.gz
+  URL="http://ftp.gnu.org/gnu/gcc/$BASE/$ARCHIVE"
+fi
+
+# Get archive if needed
+if [ ! -f archives/$ARCHIVE ]; then
+
+  # Select download tool
+  if [ ! -z "`which wget`" ]; then
+    WGET=wget
+  elif [ ! -z "`which curl`" ]; then
+    WGET=curl -C
+  fi
+  
+  # Download archive
+  mkdir -p archives
+  cd archives
+  $($WGET $URL)
+  cd ..
+fi
+
+# Open archive in given directory
+mkdir -p $DEST 2> /dev/null
+cp archives/$ARCHIVE $DEST
+cd $DEST
+unzip_archive $ARCHIVE
+mv $BASE/* .
+mv $BASE/.* . 2> /dev/null
+rmdir $BASE
+

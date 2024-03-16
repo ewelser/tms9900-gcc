@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# This script applies a patch to a GCC or Binutils source tree. If necessary,
+# it will download and populate the "src_modified" and "src_original"
+# directories with the needed source files. Then, the specified patch will be
+# applied to the appropriate directory under "src_modofied". Finally, complete
+# copies of the modified files will be placed in the "modified_files" directory.
+#
+# This script takes one argument: the the name of the patchfile to apply.
+#
+# Examples:
+#   apply_patch patchfiles/gcc-12.0.1-tms9900-1.0.patch
+#   apply_patch patchfiles/binutils-2.40-tms9900-1.0.patch
+
+
+# Entry point
+PATCHFILE=$1
+BASE=${PATCHFILE#*/}
+BASE=${BASE%-tms9900*}
+  
+# See if requested patch has already been applied
+CURRENT=`grep $BASE src/applied_patches.txt`
+if [ "$PATCHFILE" != "$CURRENT" ]; then
+  # Remove old source directory
+  rm -rf src/$BASE 2> /dev/null
+
+  # Populate directory from archive
+  utils/open_archive $BASE src/$BASE
+
+  # Apply patch  
+  cd src/$BASE
+  patch -p1 < ../../$PATCHFILE
+  cd ../..
+
+  # Update file tracking currently applied patches
+  grep -v "$BASE" src/applied_patches.txt > temp.txt
+  echo $PATCHFILE >> temp.txt
+  mv temp.txt src/applied_patches.txt
+
+  # Update directory holding modified files
+  utils/update_modified $PATCHFILE
+fi
+

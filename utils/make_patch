@@ -1,0 +1,108 @@
+#!/bin/bash
+
+# This script creates a patch for the changes made to a source tree in
+# the "src_modified" directory. This is only done if there is a change
+# to the code from the most recent existing patch. These patches are
+# then stored in the "patchfiles" directory.
+#
+# This script takes two arguments: The first is the name of the source tree to
+# operate on. The second if optional, and specifies the patch version number.
+# If no second argument is specified, the highest existing patch version's 
+# number plus one will be used for the patch version.
+#
+# Examples:
+#   make_patch gcc-4.4.0
+#   make_patch gcc-12.0.1 0.5
+#   make_patch binutils-2.19.1
+#   make_patch binutils-2.40 1.4
+
+# Build a patchfile
+build_patchfile() {
+  # Populate directory with unmodified files
+  if [ ! -d src/${BASE}-original ]; then
+    utils/open_archive $BASE src/${BASE}-original
+  fi
+
+  # Clean build files
+  cd src/$BASE
+  make distclean > /dev/null 2> /dev/null
+
+  # Remove Gedit backup files
+  find . | grep "~$" | xargs rm 2> /dev/null
+
+  # Remove GCC build directory
+  rm -rf build
+
+  # Make patchfile
+  cd ..
+  diff -rupN ${BASE}-original ${BASE} > ../temp.patch
+  cd ..
+}
+
+# Entry point
+BASE=$1
+VERSION=$2
+MAKE_NEW=false
+
+# Find newest patchfile for target
+LIST=`ls patchfiles | grep ${BASE}*` 2> /dev/null
+LATEST=`utils/latest $LIST`
+
+if [ "$LATEST" == "" ]; then
+  # No previous version exists, make a patch
+  if [ "$VERSION" == "" ]; then
+    # No version number specified, start with 0.0
+    VERSION="0.0"
+  fi
+  MAKE_NEW=true
+else
+  # See if newest patchfile is up-to-date
+  build_patchfile
+  diff temp.patch patchfiles/$LATEST > /dev/null
+  IS_DIFF=$?
+  rm temp.patch
+  if [ "$IS_DIFF" == "1" ]; then
+    # Changes have been made from the last patch version
+    if [ -z "$VERSION" ]; then
+      # No patch version specified, increment the most recent one
+      VERSION=${LATEST%.*}
+      VERSION=${VERSION##*-}
+      MAJOR=${VERSION%%.*}
+      let MINOR=${VERSION##*.}+1
+      VERSION="${MAJOR}.${MINOR}"
+      MAKE_NEW=true
+    else
+      # Validate provided patch version
+      LATER=`utils/latest $LATEST $BASE-$VERSION`
+      if [ "$LATER" != "$LATEST" ]; then
+        MAKE_NEW=true
+      else
+        echo "Provided version number is lower than latest patch"
+        exit
+      fi
+    fi
+  fi
+fi
+
+if [ "$MAKE_NEW" == "false" ]; then
+  echo "No need for patchfile for $BASE"
+else
+  # Make new patchfile
+  PATCHFILE=patchfiles/${BASE}-tms9900-${VERSION}.patch
+  echo "Making new patchfile ${PATCHFILE#*/}"
+  if [[ "$BASE" == "gcc"* ]]; then
+    # Update version number in patch
+    echo "TMS9900 patch ${VERSION}" > src/$BASE/gcc/DEV-PHASE
+  fi
+  build_patchfile
+  mv temp.patch $PATCHFILE
+
+  # Update file tracking currently applied patches
+  grep -v "$BASE" src/applied_patches.txt > temp.txt
+  echo $PATCHFILE >> temp.txt
+  mv temp.txt src/applied_patches.txt
+
+  # Update directory holding modified files
+  utils/update_modified $PATCHFILE
+fi
+

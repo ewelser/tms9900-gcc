@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# This script identifies the latest version of a list of files. This
+# determination is made by inspecting the last sequence of period-seperated
+# numbers in each item. The item with the greatest sequence of numbers will
+# be identified.
+#
+# For example:
+#    gcc-12.0.1-tms9900-1.0.patch
+#                       '-' <-------- Use these numbers for comparison
+#
+# Another example:
+#    gcc-4.4.0
+#    gcc-12.1.0 <-- Identified as the latest version
+#
+
+# Get latest file version
+#   1) List item names
+#   2) Make a line for each item
+#   3) Convert "filename-x.yy.z.ext" to "0000x 0000yy 0000z filename-x.yy.z.ext"
+#   4) Convert to "000x 00yy 000z filename-x.yy.z.ext"
+#   5) Sort list numerically
+#   6) Return last item
+#   7) Convert back to "filename-x.yy.z.ext"
+echo $@ | 
+tr ' ' '\n' |\
+sed 's/\(.*-\)\([0-9]\+\)\(\.\?[0-9]\+\)\([\.\?0-9]*\)\([^0-9]*\)/0000\2 0000\3 0000\4 \1\2\3\4\5/' |\
+sed 's/0*\([0-9]\{4\}\) /\1 /g' |\
+sort -n |\
+tail -1 |\
+sed 's/.* //'
+

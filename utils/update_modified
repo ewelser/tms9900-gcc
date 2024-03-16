@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# This script updates the "modified_files" directory with the files changed by
+# a specified patchfile.
+#
+# This script takes one argument: the the name of the patchfile to apply.
+#
+# Example:
+#   update_modified patchfiles/gcc-12.0.1-tms9900-1.0.patch
+
+PATCHFILE=$1
+BASE=${PATCHFILE#*/}
+BASE=${BASE%-tms9900*}
+
+REGEX_DIR="s/^[^/]*/mkdir -p modified_files\/${BASE}/"
+REGEX_SRC="s/^[^/]*/src\/${BASE}/"
+REGEX_DST="s/ [^ /]*/ modified_files\/${BASE}/"
+
+# Erase old modified files
+rm -rf modified_files/$BASE
+mkdir -p modified_files/$BASE
+
+# Use patchfile to copy new modified files
+grep rupN $PATCHFILE | sed -e "${REGEX_DIR}" -e 's/\/[^/]* .*$//' | sort | uniq > temp.sh
+grep rupN $PATCHFILE | sed -e "${REGEX_SRC}" -e "${REGEX_DST}" -e 's/^/cp /' >> temp.sh
+chmod +x temp.sh
+./temp.sh
+rm temp.sh
+
