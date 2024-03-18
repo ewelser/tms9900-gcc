@@ -65,13 +65,20 @@ if [ ! -z "$USER_DIR" ]; then
   INSTALL_DIR=$USER_DIR
 fi
 
+# Get full path to install directory
+cd ..
+HERE=`pwd`
+mkdir -p $INSTALL_DIR
+cd $INSTALL_DIR
+INSTALL_DIR=`pwd`
+cd $HERE
+
 # Report settings
 echo "Using $BIN_PATCH"
 echo "Using $GCC_PATCH"
 echo "Installing to $INSTALL_DIR"
 
 # Save settings
-cd ..
 echo "BIN_PATCH=$BIN_PATCH" > settings.cfg
 echo "GCC_PATCH=$GCC_PATCH" >> settings.cfg
 echo "INSTALL_DIR=$INSTALL_DIR" >> settings.cfg
