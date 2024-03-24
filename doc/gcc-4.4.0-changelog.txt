@@ -1,0 +1,200 @@
+TMS9900 patch for GCC 4.4.0 changelog
+
+1.19
+  Released 2019-02-26
+  Removed side-effects from zero compares
+
+1.18
+  Released 2018-10-31
+  Fixed 16-bit signed right shift
+  Fixed 32-bit unsigned right shift
+
+1.17
+  Released 2018-10-25
+  More strict checks for address in BL commands
+  Optimization for 32-bit left shift by 8 bits
+  Optimization for 32-bit logical right shift by 8 bits
+  Fixed 32-bit right shift by more than 16 bits
+  Fixed 8-bit multiplies 
+
+1.16
+  Released 2017-08-24
+  Fixed 32-bit right constant shift, failed with some constants 
+  Fixed all 32-bit variable shifts, was using r0 as temp register
+  Fixed carry bit in 32-bit add
+  Fixed invalid instruction in some 32-bit add forms
+
+1.15
+  Released 2017-05-29
+  Added .size directive to compiled output
+  Fixed several instruction lengths
+  Fixed multiply bug
+
+1.14
+  Released 2017-02-19
+  Add tail call optimization
+  Confirm c++ support
+
+1.13
+  Released 2016-11-23
+  Add compilation pass to better use post-increment addressing
+  Ensure word alignmnt for symbols
+  Remove optimization of tests against zero, they emitted unnecessary opcodes
+  Fix 32-bit shift instructions
+  Handle edge case of shift by zero bits
+  Fix and to use ANDI instrustion when appropriate
+  Add optimizations for shift of 32-bit value by 16 bits
+  Fix multiply to prevent using MPY with an immediate value
+
+1.12
+  Released 2015-08-16
+  Fixed bug when dividing by constant value
+  Improved type testing for instruction arguments
+  Added text to "--version" flag output to show patch version.
+
+1.11
+  Released 2015-06-14
+  Fixed compilation error due to missing include in tms9900.h
+  Fixed problem declaring global variables, not always exported
+  Some instruction sizes were defined incorrectly, causing assembly errors
+  Fixed conditional jump displacement limits, they were too small.
+  Added compilation pass to add needed SWPB instructions.
+
+1.10
+  Released 2014-12-03
+  Prevented use of R0 as an address base
+  Moved jump tables into text segment to free up space for variables
+  Fixed bug which put initialized data in bss section
+  Fixed negation of byte quantities
+  Minor code cleanup
+
+1.9
+  Released 2014-10-10
+  Changed order of jumps for less-than-or-equal tests to improve performance
+  Fixed several integer type conversion bugs
+  Corrected handling of variable shift by zero bits
+  Fixed signed division
+  Added support for dwarf debugging information
+
+1.8
+  Released 2013-05-01
+  Fixed R11 restoration in epilogue being dropped by DCE
+  Added support for named sections
+  Removed support for directly zeroing byte memory, was buggy in some memories
+
+1.7
+  Released 2013-01-16
+  Libgcc now built for TMS9900
+  Implemented optimized assembly functions in libgcc for:
+    count leading zero bits
+    count trailing zero bits
+    find index of least significant set bit
+    count set bits
+    calculate parity bit
+    signed and unsigned 32-bit division and modulus
+  Fixed 32-bit multiplies, was only doing unsigned multiply
+  Fixed 32-bit negation, was emitting invalid NEG instruction
+  Removed fake PC register (Yay!)
+  New build instructions to make libgcc
+  Fixed function prologue and epilogue, was saving R11 unnecessarily
+  Optimized function epilogue, saving a few cycles
+  Enforced correct use of R11 register, was causing randomly broken code
+
+1.6
+  Released 2012-07-14
+  Fixed comparison against +-1 and +-2, were broken in 1.5
+  Prevented incorrect use of fake PC register for real work
+  Improved AND operations to use fewer instructions
+  Fixed long-to-char conversions
+  Fixed post-increment pointers which live on the stack
+  Added optimization for setting byte quantities to zero
+  Added optimization for (int)X = (unsigned char)((int)X)
+  Removed double-counting saved registers on the stack
+  Reduced overhead needed for multiply instructions
+  Fixed bug causing structres to be loaded into registers
+  Structures used as function arguments now passed by reference
+  Fixed more bugs causing bad int-to-char conversions
+
+1.5
+  Released 2012-03-14
+  Fixed several word-to-byte conversion errors
+  Fixed "unrecognizable instruction" for zero comparison
+  Made optimizations for comparison instructions
+  Made improvements to condition flag handling
+  Switch statements now work properly
+  Fixed divison and modulus, operands were used in wrong order
+  Fixed subtract, operands were occasionally used in wrong order
+  Fixed stack frame corruption when local variables are in use
+  Added optimizations for forms like (int Y)=((int)(char X))<<N
+
+1.4
+  Released 2011-08-08
+  Fixed bug with byte initilizers, it was handling negative values wrongly
+  Fixed multiply bug, it was using the wrong registers
+  Changed frame pointer from R8 to R9. Frame was being lost
+  Byte reads from memory were assumed to be copied into register's LSB.
+  Fixed a problem with AND improperly modifying temp values.
+  Fixed a bug where R11 was not saved if used as a temp register.
+  Modified output to use hex values for all constants
+
+1.3
+  Released 2011-07-23
+  Add optimization to remove redundant moves in int-to-char casts
+  Remove invalid CB compare immediate mode.
+  Add optimizations for byte immediate comparison
+  Added optimizations for shift and cast forms like (byte)X=(int)X>>N
+  Remove invalid compare immediate with memory
+  Improved support for subtract immediate
+  Fixed bug causing gibberish in assembly output
+  GCC now recognizes that bit shift operations set the comparison flags
+  Fixed bug causing bytewise AND to operate on the wrong byte
+  Add optimization for loading byte arrays into memory
+  Confirmed that variadic functions work properly.
+  Fixed the subtract instruction to handle constants
+  Fixed the CI instruction, it was allowing memory operands
+  Fixed a bug allowing the fake PC register to be used as a real register
+  Encourage memory-to-memory copies instead of mem-reg-mem copies
+  Added optimization to eliminate INV-INV-SZC sequences
+  Modify GCC's register allocation engine to handle TMS9900 byte values
+  Remove the 32 fake 8-bit registers. GCC now uses 16 16-bit registers
+  Modify memory addressing to handle forms like @LABEL+CONSTANT(Rn)
+  Clean up output assembly by vertically aligning operands
+  Clean up output by combining constant expressions
+  Optimize left shift byte quantities
+  Fixed a bug where SZC used the wrong register
+  Removed C instruction for "+=4" forms, AI is twice as fast
+  Added 32-bit negate
+  Fixed 32-bit subtract
+  Fixed a bug causing MUL to use the wrong register
+  Fixed a bug allowing shifts to use shift counts in the wrong register
+  Confirmed that inline assembly works correctly
+  Added optimization to convert "ANDI Rn, >00FF" to "SB Rn,Rn"
+  Optimize compare-with-zero instructions by using a temp register
+  Fixed a bug allowing *Rn and *Rn+ memory modes to be confused
+  Removed most warnings from the build process
+
+1.2
+  Released 2010-11-14
+  Fix tms9900_output_ascii, was emitting invalid code when control codes used
+  Divide and modulus operations now merged when possible
+  Fix data symbol declarations, now TI compliant
+  Fix "+=4" form, was missing comma in emitted code
+  Fix alignment of code, in some cases it was possible to misalign code by using odd-length string constants
+  Fix stack frame load/save differences, was using different locations in some cases
+  Save return pointer at bottom of stack. This may help for later stack trace construction
+  Add optimizations for compare-and-branch operations against -2 to 2.
+
+1.1
+  Released 2010-06-30
+  Convert decimal constants to hex
+  Add "C *Rx+, *Rx+" optimization for "+=4"
+  Fix non-volatile register allocation, was always using stack
+  Optimize call pro/epilogue, make stack usage consistant
+  Saved registers at bottom of stack frame
+  R11 no longer falsely marked as non-volatile register
+  Last argument is lost for functions like f(long a, long b, int c, long, d)
+
+1.0
+  Released 2010-06-06
+  Initial version
+

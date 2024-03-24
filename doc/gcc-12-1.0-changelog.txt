@@ -1,0 +1,6 @@
+TMS9900 patch for GCC 12.1.0 changelog
+
+1.0
+   Released 2024-03-08
+   Initial version
+

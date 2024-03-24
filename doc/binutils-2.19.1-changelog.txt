@@ -1,0 +1,48 @@
+TMS9900 patch for Bintuils 2.19.1 changelog
+
+1.7
+   Released 2014-12-03
+   Restored ability to have label and code on same line
+   Minor code cleanup
+
+1.6
+   Released 2014-10-10
+   Added support for numeric registers
+   Correct handling of comments
+   Added support for dwarf debugging information
+
+1.5
+   Released 2013-05-01
+   Added more informative syntax error messages
+   Fixed values like ">6000" in strings being mangled
+   Confirm support for named sections
+
+1.4
+   Released 2012-07-14
+   Fixed bug prohibiting the use of single quotes in a string
+   Strings my be in either TI-style 'stuff' or C-style "stuff"
+   TI-style strings follow E/A text rules
+   C-style strings may include standard escape codes "example\n"
+
+1.3
+   Released 2012-03-14
+   STST was incorrectly looking for two arguments
+   SBO, SBZ and TB incorrectly using constants
+   EQU directive was not always evluated properly
+
+1.2
+   Released 2011-07-18
+   More meaningful error messages
+   DATA and BYTE constructs with no value did not allocate space
+   Fix core dump in tms9900-objdump during disassembly
+
+1.1
+   Released 2010-11-15
+   Allow TI-style quotes ('example')
+   Allow two-byte character constants for immediate expressions (li r0, 'ab') 
+   Fix BFD Makefile bug which prevented clean compilation
+
+1.0
+   Released 2010-07-08
+   Initial version
+
