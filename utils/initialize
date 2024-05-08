@@ -4,6 +4,50 @@
 #
 # This script takes no arguments
 
+# This is a list of space-seperated applications used during a build.
+# At least one of the applications in a comma-seperated item are needed.
+# For example:
+#   NEED_APPS="app1 app2 app3,app4 app5,app6"
+#   An error message is printed if one of these conditions occur:
+#     1) app1 does not exist
+#     2) app2 does not exist
+#     3) neither app3 nor app4 exist
+#     4) neither app5 nor app6 exist
+NEED_APPS="bunzip2 diff gcc grep gunzip makeinfo patch sed tar curl,wget"
+
+# Check for needed applications
+for APP in $NEED_APPS; do
+  APP_FOUND=0
+  OLD_IFS=$IFS
+  IFS=","
+  for OR_APP in $APP; do
+    if [ ! -z "`which $OR_APP`" ]; then
+      APP_FOUND=1
+    fi
+  done
+  IFS=$OLD_IFS
+
+  if [ $APP_FOUND == 0 ]; then
+    echo A least one of these applications are needed, but none are installed:
+    echo $APP
+    exit 127
+  fi
+done
+
+# Check for neded libraries
+NEED_LIBS="mpc mpfr gmp"
+for LIB in $NEED_LIBS; do
+  echo "#include <$LIB.h>" > libtest.c
+  gcc -c libtest.c 2> /dev/null
+  if [ $? != 0 ]; then
+    rm libtest.c
+    echo "The lib$LIB library is needed, but is not installed"
+    exit 127
+  fi
+  rm -f libtest.c libtest.o 2>/dev/null
+done
+
+# All tests for prerequisites have passed, continue
 cd patchfiles
 
 # Find latest version of GCC and latest patch

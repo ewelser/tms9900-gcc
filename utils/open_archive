@@ -51,7 +51,7 @@ if [ ! -f archives/$ARCHIVE ]; then
   elif [ ! -z "`which curl`" ]; then
     WGET=curl -C
   fi
-  
+
   # Download archive
   mkdir -p archives
   cd archives

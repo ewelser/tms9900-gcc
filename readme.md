@@ -1,6 +1,6 @@
 # TMS9900 Toolchain Build Infrastructure
 
-This project automates as much of the TMS9900 toolchain build and install process as well as patch management. It is intended to be as easy to use as possible.
+This project automates as much of the TMS9900 toolchain build and install process possible. In addition, it helps with creating and applying source patches. It is intended to be as easy to use as possible.
 
 This repo uses GNU Binutils and the GNU Compiler Collection (GCC) to produce a toolchain which is capable of producing code for devices using the TMS9900 processor. The most common usage of this processor is for the TI-99/4A home computer.
 
@@ -27,7 +27,7 @@ Assuming that your environment uses `apt`, this software can me installed with t
 
 > sudo apt install build-essential libgmp-dev libmpfr-dev
 
-## How To Download 
+## How To Download
 
 To download the repo, issue this command:
 
