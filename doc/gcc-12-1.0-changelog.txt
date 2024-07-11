@@ -4,3 +4,14 @@ TMS9900 patch for GCC 12.1.0 changelog
    Released 2024-03-08
    Initial version
 
+1.1
+   Released 2024-07-10
+   Added tms9900_reorder pass to help eliminate compare instructions
+   Add fix for compares with post-increment addresses
+   Remove commented out code
+   Prevent signed hex values from being emitted into assembly
+   Change "cc_set" subsitution name to "cc"
+   Remove "cc" substitution from mov patterns, use explicit second pattern
+   add peephole to use post-increment if possible in compare instructions
+
+

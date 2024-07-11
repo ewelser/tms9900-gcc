@@ -7,7 +7,7 @@
 #
 # This script takes two arguments: The first is the name of the source tree to
 # operate on. The second if optional, and specifies the patch version number.
-# If no second argument is specified, the highest existing patch version's 
+# If no second argument is specified, the highest existing patch version's
 # number plus one will be used for the patch version.
 #
 # Examples:
@@ -56,10 +56,16 @@ if [ "$LATEST" == "" ]; then
   fi
   MAKE_NEW=true
 else
-  # See if newest patchfile is up-to-date
+  # See if newest patchfile is up-to-date.
+  # Compare diff's, but ignore chunk headers
   build_patchfile
-  diff temp.patch patchfiles/$LATEST > /dev/null
+  sed -e '/^diff -rupN/d' -e '/^+++/d' -e '/^---/d' temp.patch > a
+  sed -e '/^diff -rupN/d' -e '/^+++/d' -e '/^---/d' patchfiles/$LATEST > b
+  diff a b > /dev/null
   IS_DIFF=$?
+  rm a b
+
+
   rm temp.patch
   if [ "$IS_DIFF" == "1" ]; then
     # Changes have been made from the last patch version
