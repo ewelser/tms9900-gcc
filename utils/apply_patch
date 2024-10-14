@@ -15,7 +15,7 @@
 
 # Entry point
 PATCHFILE=$1
-BASE=${PATCHFILE#*/}
+BASE=${PATCHFILE##*/}
 BASE=${BASE%-tms9900*}
   
 # See if requested patch has already been applied

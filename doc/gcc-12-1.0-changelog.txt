@@ -14,4 +14,15 @@ TMS9900 patch for GCC 12.1.0 changelog
    Remove "cc" substitution from mov patterns, use explicit second pattern
    add peephole to use post-increment if possible in compare instructions
 
-
+1.2
+   Released 2024-10-13
+   Minor code formatting clean up
+   Add partial support for 64-bit values
+   Refactor management of nonvolatile registers
+   Refactor code to select a subreg of a data object
+   Fix wrong register used for shift instruction
+   Reformat code to fit within 80 columns for easier readability
+   Fix constant shift count errors
+   Better optimizations for comparison operations
+   Remove dead code
+   

@@ -5,10 +5,10 @@
 # to the code from the most recent existing patch. These patches are
 # then stored in the "patchfiles" directory.
 #
-# This script takes two arguments: The first is the name of the source tree to
-# operate on. The second if optional, and specifies the patch version number.
-# If no second argument is specified, the highest existing patch version's
-# number plus one will be used for the patch version.
+# This script takes up to two arguments: The first is the name of the source 
+# tree to operate on. The second is optional, and specifies the patch version
+# number. If no second argument is specified, the value of the highest existing
+# patch's version number plus one will be used for the new patch version.
 #
 # Examples:
 #   make_patch gcc-4.4.0
@@ -64,9 +64,8 @@ else
   diff a b > /dev/null
   IS_DIFF=$?
   rm a b
-
-
   rm temp.patch
+
   if [ "$IS_DIFF" == "1" ]; then
     # Changes have been made from the last patch version
     if [ -z "$VERSION" ]; then
