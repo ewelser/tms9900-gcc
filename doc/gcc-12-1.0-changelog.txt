@@ -25,4 +25,12 @@ TMS9900 patch for GCC 12.1.0 changelog
    Fix constant shift count errors
    Better optimizations for comparison operations
    Remove dead code
-   
+
+1.3
+   Released 2024-10-17
+   Restructured function stack for alloca() support
+   Frame pointer points to top of local data stored on the stack
+   Reduced size of function prologue by two bytes when frame pointer required
+   Reduced size of function epilogue by two bytes when frame pointer required
+   Removed dead code and cleaned up comments
+

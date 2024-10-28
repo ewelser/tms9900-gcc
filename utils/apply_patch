@@ -32,10 +32,16 @@ if [ "$PATCHFILE" != "$CURRENT" ]; then
   patch -p1 < ../../$PATCHFILE
   cd ../..
 
-  # Update file tracking currently applied patches
+  # Update files tracking currently applied patches
   grep -v "$BASE" src/applied_patches.txt > temp.txt
-  echo $PATCHFILE >> temp.txt
+  echo ${PATCHFILE/*patchfiles/patchfiles} >> temp.txt
   mv temp.txt src/applied_patches.txt
+
+  APP=${BASE%-*}
+  APP=`echo $APP | tr binutlsgc BINUTLSGC`
+  grep -v "$APP" settings.cfg > temp.txt
+  echo ${APP}_PATCH=${PATCHFILE##*\/} >> temp.txt
+  mv temp.txt settings.cfg
 
   # Update directory holding modified files
   utils/update_modified $PATCHFILE
