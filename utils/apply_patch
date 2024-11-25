@@ -12,6 +12,21 @@
 #   apply_patch patchfiles/gcc-12.0.1-tms9900-1.0.patch
 #   apply_patch patchfiles/binutils-2.40-tms9900-1.0.patch
 
+# Display usage help if needed
+if [ -z $1 ] ||
+   [ "$1" == "-h" ] ||
+   [ "$1" == "--help" ]; then
+  echo "Usage: apply_patch {PATCHFILE}"
+  echo ""
+  echo "  PATCHFILE - Path to patchfile to apply"
+  echo "            from the latest patch number for BASE will be used"
+  echo ""
+  echo "The base source tree will be deduced from the patchfile name"
+  echo ""
+  echo "Examples:"
+  echo "  apply_patch ./patchfiles/binutils-2.19.1-tms9900-1.7.patch"
+  exit
+fi
 
 # Entry point
 PATCHFILE=$1

@@ -16,6 +16,24 @@
 #   make_patch binutils-2.19.1
 #   make_patch binutils-2.40 1.4
 
+# Display usage help if needed
+if [ -z $1 ] ||
+   [ "$1" == "-h" ] ||
+   [ "$1" == "--help" ]; then
+  echo "Usage: make_patch {BASE} [VERSION]"
+  echo ""
+  echo "  BASE    - The source tree used as the patch base"
+  echo "  VERSION - Version number to be used for patch. If not provided, an increment"
+  echo "            from the latest patch number for BASE will be used"
+  echo ""
+  echo "Examples:"
+  echo "  make_patch gcc-4.4.0"
+  echo "  make_patch gcc-12.0.1 0.5"
+  echo "  make_patch binutils-2.19.1"
+  echo "  make_patch binutils-2.40 1.4"
+  exit
+fi
+
 # Build a patchfile
 build_patchfile() {
   # Populate directory with unmodified files
@@ -29,6 +47,12 @@ build_patchfile() {
 
   # Remove Gedit backup files
   find . | grep "~$" | xargs rm 2> /dev/null
+
+  # Revert any changes in doc directories
+  while read DOCDIR; do
+    rm -rf ./${DOCDIR}/* 2> /dev/null
+    cp -rf ../${BASE}-original/${DOCDIR}/* ./${DOCDIR}/ 2> /dev/null
+  done <<< `find . -name doc`
 
   # Remove GCC build directory
   rm -rf build

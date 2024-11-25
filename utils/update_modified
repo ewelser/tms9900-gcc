@@ -21,9 +21,9 @@ rm -rf modified_files/$BASE
 mkdir -p modified_files/$BASE
 
 # Use patchfile to copy new modified files
-grep rupN $PATCHFILE | sed -e "${REGEX_DIR}" -e 's/\/[^/]* .*$//' | sort | uniq > temp.sh
-grep rupN $PATCHFILE | sed -e "${REGEX_SRC}" -e "${REGEX_DST}" -e 's/^/cp /' >> temp.sh
+grep rupN $PATCHFILE 2>/dev/null | sed -e "${REGEX_DIR}" -e 's/\/[^/]* .*$//' | sort | uniq > temp.sh
+grep rupN $PATCHFILE 2>/dev/null | sed -e "${REGEX_SRC}" -e "${REGEX_DST}" -e 's/^/cp /' >> temp.sh
 chmod +x temp.sh
-./temp.sh
+./temp.sh 2>/dev/null
 rm temp.sh
 
