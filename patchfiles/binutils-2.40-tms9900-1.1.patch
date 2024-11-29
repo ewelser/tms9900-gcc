@@ -411,8 +411,8 @@ diff -rupN binutils-2.40-original/.current_patch binutils-2.40/.current_patch
 +binutils-2.40-tms9900-0.0.patch
 diff -rupN binutils-2.40-original/gas/config/tc-tms9900.c binutils-2.40/gas/config/tc-tms9900.c
 --- binutils-2.40-original/gas/config/tc-tms9900.c	1969-12-31 19:00:00.000000000 -0500
-+++ binutils-2.40/gas/config/tc-tms9900.c	2024-11-24 21:15:44.079260806 -0500
-@@ -0,0 +1,1315 @@
++++ binutils-2.40/gas/config/tc-tms9900.c	2024-11-27 22:54:23.680463756 -0500
+@@ -0,0 +1,1321 @@
 +/* tc-tms9900.c -- Assemble code for the Texas Instruments TMS9900
 +   Copyright 2009 Eric Welser
 +
@@ -616,7 +616,7 @@ diff -rupN binutils-2.40-original/gas/config/tc-tms9900.c binutils-2.40/gas/conf
 +
 +/* List of chars besides those in app.c:symbol_chars that can start an
 +   operand.  Used to prevent the scrubber eating strings or comments */
-+const char tms9900_symbol_chars[] = "\"'*+\0";
++const char tms9900_symbol_chars[] = " \"'*+\0";
 +
 +/* Port specific pseudo ops.  */
 +const pseudo_typeS md_pseudo_table[] =
@@ -1135,125 +1135,131 @@ diff -rupN binutils-2.40-original/gas/config/tc-tms9900.c binutils-2.40/gas/conf
 +}
 +
 +
-+/* Remove comment text from an input line */
++/* Remove comment text and condense whitespace in an input line */
 +static void
-+tms9900_remove_comments (char *input_line_pointer)
++tms9900_clean_line (char *input_line_pointer)
 +{
++  #define IS_COMMENT(X) (strchr (tms9900_comment_chars, (X)) != NULL)
++  #define IS_SPACE(X) (strchr (" \t", (X)) != NULL)
++  #define NOT_SPACE(X) (! IS_SPACE(X))
++
 +  /* Elements of code grammar */
 +  enum
 +    {
-+      ST_START,         /* Start of line */
-+      ST_LABEL,         /* Code label */
-+      ST_PRE_DIRECTIVE, /* Space before directive or mnemonic */
-+      ST_DIRECTIVE,     /* Assembly directive (EX: .line) */
-+      ST_PRE_OPTION,    /* Space before directive option */
-+      ST_OPTION,        /* Directive option (EX: .line 123) */
-+      ST_MNEMONIC,      /* Opcode mnemonic (EX: mov) */
-+      ST_PRE_ARGUMENT,  /* Space before argument */
-+      ST_ARGUMENT,      /* Non-string argument */
-+      ST_POST_ARGUMENT, /* Space or comma after argument */
-+      ST_TI_STRING,     /* TI-style string */
-+      ST_GAS_STRING,    /* GAS-style string */
-+      ST_POST_STRING,   /* Space or comma after string */
-+      ST_COMMENT        /* Comment at end of line */
++      ST_START,         /*  0: Start of line                      */
++      ST_LABEL,         /*  1: Code label                         */
++      ST_PRE_DIRECTIVE, /*  2: Space before directive or mnemonic */
++      ST_DIRECTIVE,     /*  3: Assembly directive (EX: .line)     */
++      ST_PRE_OPTION,    /*  4: Space before directive option      */
++      ST_OPTION,        /*  5: Directive option (EX: .line 123)   */
++      ST_MNEMONIC,      /*  6: Opcode mnemonic (EX: mov)          */
++      ST_PRE_ARGUMENT,  /*  7: Space before argument              */
++      ST_ARGUMENT,      /*  8: Non-string argument                */
++      ST_POST_ARGUMENT, /*  9: Space or comma after argument      */
++      ST_TI_STRING,     /* 10: TI-style string                    */
++      ST_GAS_STRING,    /* 11: GAS-style string                   */
++      ST_POST_STRING,   /* 12: Space or comma after string        */
++      ST_COMMENT        /* 13: Comment at end of line             */
 +    };
 +
 +  int state = ST_START;
-+  char *p;
++  char *in = input_line_pointer;
++  char *line_end = &in[strcspn (in, "\n")];
++  char *out = in;
 +
-+  for (p = input_line_pointer; *p && *p != '\n'; ++p)
++  for (; in < line_end; in++)
 +    {
++      if (NOT_SPACE(*in) &&
++          (state != ST_COMMENT)) {*out++ = *in;}
++
 +      switch (state)
 +        {
 +          case ST_START:
-+            if (strchr (" \t",*p)) state = ST_PRE_DIRECTIVE;
-+            else if (strchr (tms9900_comment_chars, *p)) state = ST_COMMENT;
-+
-+            else state = ST_LABEL;
-+            p--;
++            if (     IS_SPACE   (*in)) {state = ST_PRE_DIRECTIVE; *out++ = ' ';}
++            else if (IS_COMMENT (*in)) {state = ST_COMMENT; out--;}
++            else                       {state = ST_LABEL;}
 +            break;
 +
 +          case ST_LABEL:
-+            if (strchr (" \t",p[1])) state = ST_PRE_DIRECTIVE;
++            if (IS_SPACE (*in)) {state = ST_PRE_DIRECTIVE; *out++ = ' ';}
 +            break;
 +
 +          case ST_PRE_DIRECTIVE:
-+            if (strchr (" \t",p[1]) == NULL)
++            if (NOT_SPACE (*in))
 +              {
-+                if (p[1] == '.') state = ST_DIRECTIVE;
-+                else if (strchr (tms9900_comment_chars, p[1])) state = ST_COMMENT;
-+                else state = ST_MNEMONIC;
++                if      (*in == '.')       {state = ST_DIRECTIVE;}
++                else if (IS_COMMENT (*in)) {state = ST_COMMENT; out--;}
++                else                       {state = ST_MNEMONIC;}
 +              }
 +            break;
 +
 +          case ST_DIRECTIVE:
-+            if (strchr (" \t",p[1])) state = ST_PRE_OPTION;
++            if (IS_SPACE (*in)) {state = ST_PRE_OPTION; *out++ = ' ';}
 +            break;
 +
 +          case ST_PRE_OPTION:
-+            if (strchr (" \t",p[1]) == NULL) state = ST_OPTION;
++            if (NOT_SPACE (*in)) {state = ST_OPTION; in--; out--;}
 +            break;
 +
 +          case ST_OPTION:
-+            if (strchr (" \t",p[1])) state = ST_OPTION;
-+            if (strchr (tms9900_comment_chars, *p)) {p--; state = ST_COMMENT;}
++            if      (IS_SPACE (*in))   {state = ST_PRE_OPTION; *out++ = ' ';}
++            else if (IS_COMMENT (*in)) {state = ST_COMMENT; out--;}
 +            break;
 +
 +          case ST_MNEMONIC:
-+            if (strchr (" \t",p[1])) state = ST_PRE_ARGUMENT;
++            if (IS_SPACE (*in)) {state = ST_PRE_ARGUMENT; *out++ = ' ';}
 +            break;
 +
 +          case ST_PRE_ARGUMENT:
-+            if (strchr (" \t",p[0]) == NULL)
++            if (NOT_SPACE (*in))
 +              {
-+                if (p[0] == '\'') state = ST_TI_STRING;
-+                else if (p[0] == '"') state = ST_GAS_STRING;
-+                else {state = ST_ARGUMENT; p--;}
++                if      (*in == '\'') {state = ST_TI_STRING;}
++                else if (*in == '"')  {state = ST_GAS_STRING;}
++                else                  {state = ST_ARGUMENT; in--; out--;}
 +              }
 +            break;
 +
 +          case ST_ARGUMENT:
-+            if (p[0] == '>' && strchr ("0123456789abcdefABCDEF", p[1])) p[0] = '$';
-+            if (strchr (" \t,",p[1]))
-+              {
-+                if (strchr (tms9900_comment_chars, *p)) {p--; state = ST_COMMENT;}
-+                else state = ST_POST_ARGUMENT;
-+              }
++            if ((in[0] == '>') &&
++                (strchr ("0123456789abcdefABCDEF", in[1]))) {out[-1] = '$';}
++            if      (IS_SPACE (*in))   {state = ST_POST_ARGUMENT;}
++            else if (*in == ',')       {state = ST_PRE_ARGUMENT;}
 +            break;
 +
 +          case ST_POST_ARGUMENT:
-+            if (strchr (" \t",p[0]) == NULL)
++            if (NOT_SPACE (*in))
 +              {
-+                if (p[0] == ',') state = ST_PRE_ARGUMENT;
-+                else {p--; state = ST_COMMENT;}
++                if (*in == ',') {state = ST_PRE_ARGUMENT;}
++                else            {state = ST_COMMENT; out--;}
 +              }
 +            break;
 +
 +          case ST_TI_STRING:
-+            if (p[0] == '\'' && p[1] == '\'') p++;  /* Skip escaped quote */
-+            else if (p[0] == '\'') state = ST_POST_STRING;
-+            break;
-+
-+          case ST_GAS_STRING:
-+            if (p[0] == '\\' && p[1] == '"') p++;  /* Skip escaped quote */
-+            else if (p[0] == '"') state = ST_POST_STRING;
-+            break;
-+
-+          case ST_POST_STRING:
-+            if (strchr (" \t", *p) == NULL)
++            if (in[0] == '\'')
 +              {
-+                if (*p == ',') state = ST_PRE_ARGUMENT;
-+                else {p--; state = ST_COMMENT;}
++                if (in[1] == '\'') {*out++ = *(++in);}  /* Skip escaped quote */
++                else               {state = ST_POST_STRING;}
 +              }
 +            break;
 +
-+          case ST_COMMENT:
-+            /* All text from here to end of line is a comment, remove it */
-+            memset (p, ' ', strcspn (p, "\n"));
-+            state = ST_PRE_ARGUMENT;
++          case ST_GAS_STRING:
++            if ((in[0] == '\\') &&
++                (in[1] == '"'))    {*out++ = *(++in);}  /* Skip escaped quote */
++            else if (in[0] == '"') {state = ST_POST_STRING;}
++            break;
++
++          case ST_POST_STRING:
++            if (NOT_SPACE (*in))
++              {
++                if (*in == ',') {state = ST_PRE_ARGUMENT;}
++                else            {state = ST_COMMENT; out--;}
++              }
 +            break;
 +        }
 +    }
++
++  // Erase the rest of the line
++  memset(out, ' ', (int)(line_end - out));
 +}
 +
 +
@@ -1261,8 +1267,8 @@ diff -rupN binutils-2.40-original/gas/config/tc-tms9900.c binutils-2.40/gas/conf
 +int
 +tms9900_start_line_hook (void)
 +{
-+  /* Remove comment text from this line */
-+  tms9900_remove_comments (input_line_pointer);
++  /* Remove comments and condense white space */
++  tms9900_clean_line (input_line_pointer);
 +
 +  /* Remove trailing whitespace */
 +  char *p = input_line_pointer;
@@ -1713,8 +1719,8 @@ diff -rupN binutils-2.40-original/gas/config/tc-tms9900.c binutils-2.40/gas/conf
 +  if (! bfd_reloc_type_lookup (stdoutput, fixp->fx_r_type))
 +    {
 +      as_bad_where (fixp->fx_file, fixp->fx_line,
-+		    _("reloc %d not supported by object file format"),
-+		    (int) fixp->fx_r_type);
++                    _("reloc %d not supported by object file format"),
++                    (int) fixp->fx_r_type);
 +      return NULL;
 +    }
 +
@@ -2021,7 +2027,7 @@ diff -rupN binutils-2.40-original/opcodes/Makefile.in binutils-2.40/opcodes/Make
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vax-dis.Plo@am__quote@
 diff -rupN binutils-2.40-original/opcodes/tms9900-dis.c binutils-2.40/opcodes/tms9900-dis.c
 --- binutils-2.40-original/opcodes/tms9900-dis.c	1969-12-31 19:00:00.000000000 -0500
-+++ binutils-2.40/opcodes/tms9900-dis.c	2024-11-24 21:24:55.618235920 -0500
++++ binutils-2.40/opcodes/tms9900-dis.c	2024-11-25 22:21:07.044769299 -0500
 @@ -0,0 +1,387 @@
 +/* Print TMS9900 instructions
 +   Copyright 2009 Eric Welser
@@ -2146,7 +2152,7 @@ diff -rupN binutils-2.40-original/opcodes/tms9900-dis.c binutils-2.40/opcodes/tm
 +  // source, reg      |Opcode           |Register   |Ts   |Source Reg.|
 +
 +  char source[16];
-+  parse_mod (buffer, info, source, (buffer->opcode & 0x3F));
++  parse_mode (buffer, info, source, (buffer->opcode & 0x3F));
 +  info->fprintf_func (info->stream, "%s %s, r%d", 
 +                      text, source, (buffer->opcode >> 6) & 0xF);
 +}
@@ -2157,7 +2163,7 @@ diff -rupN binutils-2.40-original/opcodes/tms9900-dis.c binutils-2.40/opcodes/tm
 +  // source, nbits    |Opcode           |NBits      |Ts   |Source Reg.|
 +
 +  char source[16];
-+  parse_mod (buffer, info, source, (buffer->opcode & 0x3F));
++  parse_mode (buffer, info, source, (buffer->opcode & 0x3F));
 +  info->fprintf_func (info->stream, "%s %s, %d", 
 +                      text, source, (buffer->opcode >> 6) & 0xF);
 +}
@@ -2177,7 +2183,7 @@ diff -rupN binutils-2.40-original/opcodes/tms9900-dis.c binutils-2.40/opcodes/tm
 +  // dest             |Opcode                       |Ts   |Source Reg.|
 +
 +  char source[16];
-+  parse_mod (buffer, info, source, (buffer->opcode & 0x3F));
++  parse_mode (buffer, info, source, (buffer->opcode & 0x3F));
 +  info->fprintf_func (info->stream, "%s %s", text, source);
 +}
 +

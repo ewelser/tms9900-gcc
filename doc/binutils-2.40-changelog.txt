@@ -5,7 +5,7 @@ TMS9900 patch for Binutils 2.40 changelog
    Initial version
 
 1.1
-   Released 2024-11-24
+   Released 2024-11-28
    Fix parse errors for TI strings with C-escaped chars
    Remove public comment characters for GAS parser
    Add '*' to list of comment characters for internal parser
